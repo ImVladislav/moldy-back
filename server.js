@@ -47,8 +47,8 @@ app.post('/chat', async (req, res) => {
       console.log('message', messages);
 
       const {
-         description: { agent, background, culture },
-         personality: { traits, tone, reaction },
+         description,
+         personality,
          instructions, // Этот объект уже является массивом, не имеет вложенных объектов
          example_messages
       } = bot1Prompt;
@@ -81,35 +81,30 @@ app.post('/chat', async (req, res) => {
 
       const promptMessages = [
          {
-           role: 'system',
-           content: `
-             Character Overview:
-             - Agent: ${agent || 'No agent description available'}
-             - Background: ${background || 'No background description available'}
-             - Culture: ${culture || 'No culture description available'}
-       
-             Personality Traits:
-             - ${traits && traits.length > 0 ? traits.join(', ') : 'No personality traits available'}
-       
-             Tone:
-             - ${tone && tone.length > 0 ? tone.join(', ') : 'No tone available'}
-       
-             Reaction to Unexpected Scenarios:
-             - ${reaction && reaction.unexpected_scenarios ? reaction.unexpected_scenarios : 'No reaction info available'}
-       
-             Instructions:
-             ${instructions && instructions.length > 0 
-               ? instructions.map((instruction) => `- ${instruction}`).join('\n')
-               : 'No instructions available'}
-       
-             Example Messages:
-             ${example_messages && example_messages.length > 0 
-               ? example_messages.map((msg) => `- ${msg}`).join('\n') 
-               : 'No example messages available'}
-           `
+            role: 'system',
+            content: `
+              Character Overview:
+              - Name: ${bot1Prompt.name || 'No name available'}
+              - Description: ${bot1Prompt.description || 'No description available'}
+              
+              Personality:
+              - ${bot1Prompt.details.personality && bot1Prompt.details.personality.length > 0
+                  ? bot1Prompt.details.personality.join(', ')
+                  : 'No personality traits available'}
+              
+              Instructions:
+              ${bot1Prompt.details.instructions && bot1Prompt.details.instructions.do_and_donts.length > 0 
+                  ? bot1Prompt.details.instructions.do_and_donts.map(instruction => `- ${instruction}`).join('\n')
+                  : 'No instructions available'}
+              
+              Example Messages:
+              ${bot1Prompt.details.instructions && bot1Prompt.details.instructions.response_guidelines.length > 0 
+                  ? bot1Prompt.details.instructions.response_guidelines.map(msg => `- ${msg}`).join('\n')
+                  : 'No example messages available'}
+            `
          },
          ...trimmedHistory // Добавляем очищенную историю
-       ];
+      ];
 
       console.log('promptMessages', promptMessages);
 
