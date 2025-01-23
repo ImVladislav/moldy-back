@@ -78,7 +78,50 @@ app.post('/chat', async (req, res) => {
       const trimmedHistory = chatHistory.slice(-10);
 
 
-
+      const getPromptMessages = (botPrompt, messages) => {
+         const cleanedMessages = messages.map((msg) => {
+           const cleanedMsg = msg.replace(/<.*?>/g, '').trim();
+           return cleanedMsg.replace(/^You:\s*/, '').trim();
+         });
+       
+         const chatHistory = [];
+         for (let i = 0; i < cleanedMessages.length; i++) {
+           if (i % 2 === 0) {
+             chatHistory.push({ role: 'user', content: cleanedMessages[i] });
+           } else {
+             chatHistory.push({ role: 'assistant', content: cleanedMessages[i] });
+           }
+         }
+       
+         const trimmedHistory = chatHistory.slice(-10);
+       
+         const promptMessages = [
+           {
+             role: 'system',
+             content: `
+               Character Overview:
+               - Name: ${botPrompt.name}
+               - Description: ${botPrompt.description.details.join(' ')}
+               
+               Personality:
+               - ${botPrompt.personality.traits.join(', ')}
+               - Values: ${botPrompt.personality.values.join(', ')}
+               - Culture: ${botPrompt.personality.culture.join(', ')}
+               
+               Instructions:
+               - ${botPrompt.instruction.do_donts.do.map((instruction) => `- ${instruction}`).join('\n')}
+               - Don't: ${botPrompt.instruction.do_donts.dont}
+               
+               Example Messages:
+               ${botPrompt.example_dialogues.map((msg) => `User: ${msg.user}\nBot: ${msg.response}`).join('\n')}
+             `,
+           },
+           ...trimmedHistory,
+         ];
+       
+         return promptMessages;
+       };
+       
       const promptMessages = [
          {
             role: 'system',

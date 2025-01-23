@@ -72,16 +72,24 @@ const getPromptMessages = (botPrompt, messages) => {
       content: `
         Character Overview:
         - Name: ${botPrompt.name}
-        - Description: ${botPrompt.description}
+        - Description: ${botPrompt.description.details.join(' ')}
         
         Personality:
-        - ${botPrompt.personality.join(', ')}
+        - Traits: ${botPrompt.personality.traits.join(', ')}
+        - Values: ${botPrompt.personality.values.join(', ')}
+        - Culture: ${botPrompt.personality.culture.join(', ')}
+        - Unexpected Scenarios: ${botPrompt.personality.unexpected_scenarios}
         
         Instructions:
-        ${botPrompt.instructions.do_and_donts.map((instruction) => `- ${instruction}`).join('\n')}
+        Do:
+        ${botPrompt.instruction.do_donts.do.map((instruction) => `- ${instruction}`).join('\n')}
+        Don't:
+        - ${botPrompt.instruction.do_donts.dont}
         
         Example Messages:
-        ${botPrompt.example_messages.map((msg) => `- ${msg}`).join('\n')}
+        ${botPrompt.example_dialogues.map(
+          (msg) => `User: ${msg.user}\nBot: ${msg.response}`
+        ).join('\n')}
       `,
     },
     ...trimmedHistory,
