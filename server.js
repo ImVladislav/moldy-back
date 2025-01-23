@@ -156,7 +156,9 @@ app.post('/chat/bot1', async (req, res) => {
 app.post('/chat/bot2', async (req, res) => {
   handleChat(req, res, bot2Prompt); // Uses Junior.json
 });
-
+app.post('/chat', async (req, res) => {
+   handleChat(req, res, bot2Prompt); // Uses Junior.json
+ });
 app.post('/chat/bot3', async (req, res) => {
   handleChat(req, res, bot3Prompt); // Uses Melania.json
 });
