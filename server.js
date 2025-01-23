@@ -7,9 +7,9 @@ const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 // Load prompts for three different bots
-const bot1Prompt = JSON.parse(fs.readFileSync('prompts/moldy.json', 'utf8'));
-const bot2Prompt = JSON.parse(fs.readFileSync('prompts/bot2.json', 'utf8'));
-const bot3Prompt = JSON.parse(fs.readFileSync('prompts/bot3.json', 'utf8'));
+const bot1Prompt = JSON.parse(fs.readFileSync('prompts/Donald.json', 'utf8'));
+const bot2Prompt = JSON.parse(fs.readFileSync('prompts/Junior.json', 'utf8'));
+const bot3Prompt = JSON.parse(fs.readFileSync('prompts/Melania.json', 'utf8'));
 
 const app = express();
 const PORT = 4000;
@@ -48,8 +48,8 @@ app.use('/chat', limiter);
 // Helper function to handle prompts
 const getPromptMessages = (botPrompt, messages) => {
   const cleanedMessages = messages.map((msg) => {
-    const cleanedMsg = msg.replace(/<.*?>/g, '').trim(); // Removes HTML tags
-    return cleanedMsg.replace(/^You:\s*/, '').trim(); // Removes "You:" if present
+    const cleanedMsg = msg.replace(/<.*?>/g, '').trim(); // Remove HTML tags
+    return cleanedMsg.replace(/^You:\s*/, '').trim(); // Remove "You:" if present
   });
 
   // Convert messages to OpenAI format
@@ -62,31 +62,26 @@ const getPromptMessages = (botPrompt, messages) => {
     }
   }
 
-  // Limit history to last 10 messages
+  // Limit chat history to last 10 messages
   const trimmedHistory = chatHistory.slice(-10);
 
+  // Generate dynamic promptMessages
   const promptMessages = [
     {
       role: 'system',
       content: `
         Character Overview:
-        - Name: ${botPrompt.name || 'No name available'}
-        - Description: ${botPrompt.description || 'No description available'}
+        - Name: ${botPrompt.name}
+        - Description: ${botPrompt.description}
         
         Personality:
-        - ${botPrompt.details.personality && botPrompt.details.personality.length > 0
-            ? botPrompt.details.personality.join(', ')
-            : 'No personality traits available'}
+        - ${botPrompt.personality.join(', ')}
         
         Instructions:
-        ${botPrompt.details.instructions && botPrompt.details.instructions.do_and_donts.length > 0
-            ? botPrompt.details.instructions.do_and_donts.map((instruction) => `- ${instruction}`).join('\n')
-            : 'No instructions available'}
+        ${botPrompt.instructions.do_and_donts.map((instruction) => `- ${instruction}`).join('\n')}
         
         Example Messages:
-        ${botPrompt.details.instructions && botPrompt.details.instructions.response_guidelines.length > 0
-            ? botPrompt.details.instructions.response_guidelines.map((msg) => `- ${msg}`).join('\n')
-            : 'No example messages available'}
+        ${botPrompt.example_messages.map((msg) => `- ${msg}`).join('\n')}
       `,
     },
     ...trimmedHistory,
@@ -95,22 +90,7 @@ const getPromptMessages = (botPrompt, messages) => {
   return promptMessages;
 };
 
-// Route for Bot 1
-app.post('/chat/bot1', async (req, res) => {
-  handleChat(req, res, bot1Prompt);
-});
-
-// Route for Bot 2
-app.post('/chat/bot2', async (req, res) => {
-  handleChat(req, res, bot2Prompt);
-});
-
-// Route for Bot 3
-app.post('/chat/bot3', async (req, res) => {
-  handleChat(req, res, bot3Prompt);
-});
-
-// Main chat handling logic
+// Handle different bots
 const handleChat = async (req, res, botPrompt) => {
   try {
     const { messages } = req.body;
@@ -146,6 +126,19 @@ const handleChat = async (req, res, botPrompt) => {
     res.status(500).json({ error: 'Error processing request' });
   }
 };
+
+// Routes for each bot
+app.post('/chat/bot1', async (req, res) => {
+  handleChat(req, res, bot1Prompt); // Uses Donald.json
+});
+
+app.post('/chat/bot2', async (req, res) => {
+  handleChat(req, res, bot2Prompt); // Uses Junior.json
+});
+
+app.post('/chat/bot3', async (req, res) => {
+  handleChat(req, res, bot3Prompt); // Uses Melania.json
+});
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
