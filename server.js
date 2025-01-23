@@ -47,10 +47,12 @@ app.use('/chat', limiter);
 
 // Helper function to handle prompts
 const getPromptMessages = (botPrompt, messages) => {
-  const cleanedMessages = messages.map((msg) => {
-    const cleanedMsg = msg.replace(/<.*?>/g, '').trim(); // Remove HTML tags
-    return cleanedMsg.replace(/^You:\s*/, '').trim(); // Remove "You:" if present
-  });
+   const cleanedMessages = messages.map((msg) => {
+      // Видаляємо HTML-теги
+      const cleanedMsg = msg.replace(/<[^>]*>/g, '').trim();
+      // Видаляємо "you: " з початку повідомлення
+      return cleanedMsg.replace(/^you:\s*/, '').trim();
+    });
 
   // Convert messages to OpenAI format
   const chatHistory = [];
