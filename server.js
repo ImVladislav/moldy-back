@@ -67,34 +67,37 @@ const getPromptMessages = (botPrompt, messages) => {
 
   // Generate dynamic promptMessages
   const promptMessages = [
-    {
-      role: 'system',
-      content: `
-        Character Overview:
-        - Name: ${botPrompt.name}
-        - Description: ${botPrompt.description.details.join(' ')}
-        
-        Personality:
-        - Traits: ${botPrompt.personality.traits.join(', ')}
-        - Values: ${botPrompt.personality.values.join(', ')}
-        - Culture: ${botPrompt.personality.culture.join(', ')}
-        - Unexpected Scenarios: ${botPrompt.personality.unexpected_scenarios}
-        
-        Instructions:
-        Do:
-        ${botPrompt.instruction.do_donts.do.map((instruction) => `- ${instruction}`).join('\n')}
-        Don't:
-        - ${botPrompt.instruction.do_donts.dont}
-        
-        Example Messages:
-        ${botPrompt.example_dialogues.map(
-          (msg) => `User: ${msg.user}\nBot: ${msg.response}`
-        ).join('\n')}
-      `,
-    },
-    ...trimmedHistory,
-  ];
-
+   {
+     role: 'system',
+     content: `
+       Character Overview:
+       - Name: ${botPrompt.name || 'No name available'}
+       - Description: ${botPrompt.description.details.join(' ') || 'No description available'}
+       
+       Personality:
+       - Traits: ${botPrompt.personality?.traits?.join(', ') || 'No traits available'}
+       - Values: ${botPrompt.personality?.values?.join(', ') || 'No values available'}
+       - Culture: ${botPrompt.personality?.culture?.join(', ') || 'No culture information available'}
+       - Unexpected Scenarios: ${botPrompt.personality?.unexpected_scenarios || 'No specific instructions for scenarios'}
+       
+       Instructions:
+       ${botPrompt.instruction?.do_donts?.do?.map((instruction) => `- ${instruction}`).join('\n') || 'No instructions available'}
+       - Avoid: ${botPrompt.instruction?.do_donts?.dont || 'No specific restrictions'}
+       - Message Length: ${botPrompt.instruction?.message_length || 'No preference specified'}
+       - Emoji Use: ${botPrompt.instruction?.emoji_use || 'No guidance provided'}
+       - Catchphrases: ${botPrompt.instruction?.catchphrases?.join(', ') || 'No catchphrases provided'}
+       - Criticism Response: ${
+         botPrompt.instruction?.criticism_response?.join('\n') || 'No specific guidance for criticism'
+       }
+       
+       Example Messages:
+       ${botPrompt.example_dialogues
+         ?.map((dialogue) => `User: ${dialogue.user}\nResponse: ${dialogue.response}`)
+         .join('\n') || 'No example messages available'}
+     `,
+   },
+   ...trimmedHistory,
+ ];
   return promptMessages;
 };
 
