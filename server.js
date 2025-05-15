@@ -10,9 +10,10 @@ const app = express();
 const PORT = 4000;
 const TOKEN = process.env.TOKEN;
 
-const allowedOrigins = ['https://boobsi.vercel.app/', 'https://moldy.lol'];
+// 🔐 Дозволені домени
+const allowedOrigins = ['https://boobsi.vercel.app', 'https://moldy.lol'];
 
-// CORS
+// ✅ CORS
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin || origin.startsWith('http://localhost') || allowedOrigins.includes(origin)) {
@@ -25,14 +26,14 @@ app.use(cors({
 
 app.use(bodyParser.json());
 
-// Rate limiting
-app.use('/chat', rateLimit({
+// ⚠️ Rate limiter
+const limiter = rateLimit({
   windowMs: 60 * 1000,
   max: 60,
   message: 'Too many requests from this IP, try again later.',
-}));
+});
 
-// Load prompts
+// 📦 Завантаження промптів
 const loadPrompt = (filename) => JSON.parse(fs.readFileSync(`prompts/${filename}`, 'utf8'));
 const botPrompts = {
   bot1: loadPrompt('Sunny.json'),
@@ -41,7 +42,7 @@ const botPrompts = {
   bot4: loadPrompt('Eva.json'),
 };
 
-// Format prompt for OpenAI
+// 🧠 Генерація повідомлень для OpenAI
 const getPromptMessages = (botPrompt, messages) => {
   const cleaned = messages.map(msg => msg.replace(/<[^>]*>/g, '').replace(/^you:\s*/i, '').trim());
   const chatHistory = cleaned.map((text, i) => ({
@@ -74,7 +75,7 @@ Instructions:
 
 Examples:
 ${(botPrompt.example_dialogues || []).map(ex => `User: ${ex.user}\nResponse: ${ex.response}`).join('\n')}
-  `.trim();
+`.trim();
 
   return [
     { role: 'system', content: systemContent },
@@ -82,15 +83,15 @@ ${(botPrompt.example_dialogues || []).map(ex => `User: ${ex.user}\nResponse: ${e
   ];
 };
 
-// Chat handler
-const handleChat = async (req, res, prompt) => {
+// 📡 Обробка чату
+const handleChat = async (req, res, botPrompt) => {
   try {
     const { messages } = req.body;
     if (!Array.isArray(messages)) throw new Error("Invalid 'messages' array");
 
     const payload = {
       model: 'gpt-3.5-turbo',
-      messages: getPromptMessages(prompt, messages),
+      messages: getPromptMessages(botPrompt, messages),
     };
 
     const response = await axios.post('https://api.openai.com/v1/chat/completions', payload, {
@@ -104,18 +105,21 @@ const handleChat = async (req, res, prompt) => {
     res.json({ reply });
   } catch (err) {
     console.error('Chat error:', err?.response?.data || err.message);
-    res.status(500).json({ error: 'OpenAI request failed' });
+    res.status(500).json({
+      error: 'OpenAI request failed',
+      details: err?.response?.data || err.message
+    });
   }
 };
 
-// Endpoints
-app.post('/chat/bot1', (req, res) => handleChat(req, res, botPrompts.bot1));
-app.post('/chat/bot2', (req, res) => handleChat(req, res, botPrompts.bot2));
-app.post('/chat/bot3', (req, res) => handleChat(req, res, botPrompts.bot3));
-app.post('/chat/bot4', (req, res) => handleChat(req, res, botPrompts.bot4));
+// 🧩 Маршрути для кожного бота
+app.post('/chat/bot1', limiter, (req, res) => handleChat(req, res, botPrompts.bot1));
+app.post('/chat/bot2', limiter, (req, res) => handleChat(req, res, botPrompts.bot2));
+app.post('/chat/bot3', limiter, (req, res) => handleChat(req, res, botPrompts.bot3));
+app.post('/chat/bot4', limiter, (req, res) => handleChat(req, res, botPrompts.bot4));
 
-// Optional fallback
-app.post('/chat', (req, res) => handleChat(req, res, botPrompts.bot1));
+// 🔁 За замовчуванням — bot1
+app.post('/chat', limiter, (req, res) => handleChat(req, res, botPrompts.bot1));
 
-// Start server
+// 🚀 Запуск
 app.listen(PORT, () => console.log(`🚀 Server running at http://localhost:${PORT}`));
