@@ -10,7 +10,7 @@ const app = express();
 const PORT = 4000;
 const TOKEN = process.env.TOKEN;
 
-const allowedOrigins = ['https://cto-one.vercel.app', 'https://moldy.lol'];
+const allowedOrigins = ['https://boobsi.vercel.app/', 'https://moldy.lol'];
 
 // CORS
 app.use(cors({
