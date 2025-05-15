@@ -7,9 +7,10 @@ const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 // Load prompts for three different bots
-const bot1Prompt = JSON.parse(fs.readFileSync('prompts/Donald.json', 'utf8'));
-const bot2Prompt = JSON.parse(fs.readFileSync('prompts/Junior.json', 'utf8'));
-const bot3Prompt = JSON.parse(fs.readFileSync('prompts/Melania.json', 'utf8'));
+const bot1Prompt = JSON.parse(fs.readFileSync('prompts/Sunny.json', 'utf8'));
+const bot2Prompt = JSON.parse(fs.readFileSync('prompts/Mini.json', 'utf8'));
+const bot3Prompt = JSON.parse(fs.readFileSync('prompts/Nova.json', 'utf8'));
+const bot4Prompt = JSON.parse(fs.readFileSync('prompts/Eva.json', 'utf8'));
 
 const app = express();
 const PORT = 4000;
@@ -162,7 +163,9 @@ app.post('/chat', async (req, res) => {
 app.post('/chat/bot3', async (req, res) => {
   handleChat(req, res, bot3Prompt); // Uses Melania.json
 });
-
+app.post('/chat/bot4', async (req, res) => {
+  handleChat(req, res, bot4Prompt); // Uses Eva.json
+});
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
