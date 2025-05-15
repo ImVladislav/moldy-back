@@ -48,69 +48,63 @@ app.use('/chat', limiter);
 
 // Helper function to handle prompts
 const getPromptMessages = (botPrompt, messages) => {
-   const cleanedMessages = messages.map((msg) => {
-     // Видалення HTML-тегів і зайвих префіксів
-     const cleanedMsg = msg.replace(/<[^>]*>/g, '').trim(); // Видалити HTML
-     return cleanedMsg.replace(/^you:\s*/, '').trim(); // Видалити "you:"
-   });
- 
-   // Форматування історії чату для OpenAI
-   const chatHistory = [];
-   for (let i = 0; i < cleanedMessages.length; i++) {
-     if (i % 2 === 0) {
-       chatHistory.push({ role: 'user', content: cleanedMessages[i] });
-     } else {
-       chatHistory.push({ role: 'assistant', content: cleanedMessages[i] });
-     }
-   }
- 
-   // Обрізаємо історію до останніх 10 повідомлень
-   const trimmedHistory = chatHistory.slice(-10);
- 
-   // Генеруємо promptMessages
-   const promptMessages = [
-     {
-       role: 'system',
-       content: `
-         Character Overview:
-         - Name: ${botPrompt.name || 'No name available'}
-         - Description: ${botPrompt.description?.join(' ') || 'No description available'}
-         
-         Personality:
-         - Traits: ${botPrompt.personality?.traits?.join(', ') || 'No traits available'}
-         - Values: ${botPrompt.personality?.values?.join(', ') || 'No values available'}
-         - Culture: ${botPrompt.personality?.culture?.join(', ') || 'No culture information available'}
-         - Unexpected Scenarios: ${botPrompt.personality?.unexpected_scenarios?.join(', ') || 'No specific instructions for scenarios'}
-         
-         Add-Ons:
-         - References (Melania): ${
-           botPrompt.add_ons?.references?.melania?.join('\n- ') || 'No references to Melania provided'
-         }
-         - References (Son): ${botPrompt.add_ons?.references?.son?.join('\n- ') || 'No references to son provided'}
-         - Quirks: ${botPrompt.add_ons?.quirks?.join(', ') || 'No quirks available'}
-         - Humor: ${botPrompt.add_ons?.humor?.join(', ') || 'No humor guidelines provided'}
-         
-         Instructions:
-         - Do: ${botPrompt.instruction?.do_donts?.do?.join('\n- ') || 'No instructions available'}
-         - Avoid: ${botPrompt.instruction?.do_donts?.dont || 'No specific restrictions'}
-         - Message Length: ${botPrompt.instruction?.message_length || 'No preference specified'}
-         - Emoji Use: ${botPrompt.instruction?.emoji_use || 'No guidance provided'}
-         - Catchphrases: ${botPrompt.instruction?.catchphrases?.join(', ') || 'No catchphrases provided'}
-         - Criticism Response: ${
-           botPrompt.instruction?.criticism_response?.join('\n') || 'No specific guidance for criticism'
-         }
-         
-         Example Messages:
-         ${botPrompt.example_dialogues
-           ?.map((dialogue) => `User: ${dialogue.user}\nResponse: ${dialogue.response}`)
-           .join('\n') || 'No example messages available'}
-       `,
-     },
-     ...trimmedHistory,
-   ];
- 
-   return promptMessages;
- };
+  const cleanedMessages = messages.map((msg) => {
+    const cleanedMsg = msg.replace(/<[^>]*>/g, '').trim();
+    return cleanedMsg.replace(/^you:\s*/i, '').trim();
+  });
+
+  const chatHistory = [];
+  for (let i = 0; i < cleanedMessages.length; i++) {
+    chatHistory.push({
+      role: i % 2 === 0 ? 'user' : 'assistant',
+      content: cleanedMessages[i],
+    });
+  }
+
+  const trimmedHistory = chatHistory.slice(-10);
+
+  const references = botPrompt.add_ons?.references || {};
+
+  const promptMessages = [
+    {
+      role: 'system',
+      content: `
+Character Overview:
+- Name: ${botPrompt.name || 'No name available'}
+- Description: ${(botPrompt.description?.details || []).join(' ') || 'No description available'}
+
+Personality:
+- Traits: ${(botPrompt.personality?.traits || []).join(', ') || 'No traits'}
+- Values: ${(botPrompt.personality?.values || []).join(', ') || 'No values'}
+- Culture: ${(botPrompt.personality?.culture || []).join(', ') || 'No culture info'}
+- Unexpected Scenarios: ${botPrompt.personality?.unexpected_scenarios || 'None'}
+
+Add-Ons:
+- References (1): ${(references.sunblock || references.donald || references.stars || []).join('\n- ') || 'No references'}
+- References (2): ${(references.boys || references.hat || references.past || []).join('\n- ') || 'No references'}
+- Quirks: ${(botPrompt.add_ons?.quirks || []).join(', ') || 'No quirks'}
+- Humor: ${(botPrompt.add_ons?.humor || []).join(', ') || 'No humor'}
+
+Instructions:
+- Do: ${(botPrompt.instruction?.do_donts?.do || []).join('\n- ') || 'None'}
+- Avoid: ${botPrompt.instruction?.do_donts?.dont || 'None'}
+- Message Length: ${botPrompt.instruction?.message_length || 'Unspecified'}
+- Emoji Use: ${botPrompt.instruction?.emoji_use || 'Unspecified'}
+- Catchphrases: ${(botPrompt.instruction?.catchphrases || []).join(', ') || 'None'}
+- Criticism Response: ${(botPrompt.instruction?.criticism_response || []).join('\n') || 'None'}
+
+Example Messages:
+${(botPrompt.example_dialogues || [])
+  .map((dialogue) => `User: ${dialogue.user}\nResponse: ${dialogue.response}`)
+  .join('\n') || 'None'}
+      `.trim(),
+    },
+    ...trimmedHistory,
+  ];
+
+  return promptMessages;
+};
+
 
 // Handle different bots
 const handleChat = async (req, res, botPrompt) => {
