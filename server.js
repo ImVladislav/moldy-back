@@ -11,14 +11,18 @@ const PORT = 4000;
 const TOKEN = process.env.TOKEN;
 
 // 🔐 Дозволені домени
-const allowedOrigins = ['https://boobsi.vercel.app', 'https://boobsi.world', 'https://www.boobsi.world/'];
-
+const allowedOrigins = [
+  'https://boobsi.vercel.app',
+  'https://boobsi.world',
+  'https://www.boobsi.world'
+];
 // ✅ CORS
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin || origin.startsWith('http://localhost') || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
+      console.error(`❌ CORS blocked: ${origin}`);
       callback(new Error('Not allowed by CORS'));
     }
   }
