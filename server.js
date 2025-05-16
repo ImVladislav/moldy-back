@@ -11,7 +11,7 @@ const PORT = 4000;
 const TOKEN = process.env.TOKEN;
 
 // 🔐 Дозволені домени
-const allowedOrigins = ['https://boobsi.vercel.app', 'https://boobsi.world'];
+const allowedOrigins = ['https://boobsi.vercel.app', 'https://boobsi.world', 'https://www.boobsi.world/'];
 
 // ✅ CORS
 app.use(cors({
