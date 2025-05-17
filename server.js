@@ -41,49 +41,60 @@ const limiter = rateLimit({
 const loadPrompt = (filename) => JSON.parse(fs.readFileSync(`prompts/${filename}`, 'utf8'));
 const botPrompts = {
   bot1: loadPrompt('Sunny.json'),
-  bot2: loadPrompt('Mini.json'),
+  bot2: loadPrompt('Mimi.json'),
   bot3: loadPrompt('Nova.json'),
   bot4: loadPrompt('Eva.json'),
 };
 
 // 🧠 Генерація повідомлень для OpenAI
 const getPromptMessages = (botPrompt, messages) => {
-  const cleaned = messages.map(msg => msg.replace(/<[^>]*>/g, '').replace(/^you:\s*/i, '').trim());
+  const cleaned = messages.map(msg =>
+    typeof msg === 'string'
+      ? msg.replace(/<[^>]*>/g, '').replace(/^you:\s*/i, '').trim()
+      : (msg.message || '')
+          .replace(/<[^>]*>/g, '')
+          .replace(/^you:\s*/i, '')
+          .trim()
+  );
+
   const chatHistory = cleaned.map((text, i) => ({
     role: i % 2 === 0 ? 'user' : 'assistant',
     content: text,
   }));
 
   const systemContent = `
-Character Overview:
-- Name: ${botPrompt.name || 'Unknown'}
-- Description: ${(botPrompt.description?.details || []).join(' ')}
+Name: ${botPrompt.name}
 
-Personality:
-- Traits: ${(botPrompt.personality?.traits || []).join(', ')}
-- Values: ${(botPrompt.personality?.values || []).join(', ')}
-- Culture: ${(botPrompt.personality?.culture || []).join(', ')}
-- Unexpected Scenarios: ${botPrompt.personality?.unexpected_scenarios || 'None'}
+Bio:
+${(botPrompt.bio || []).join('\n')}
 
-Add-Ons:
-- Quirks: ${(botPrompt.add_ons?.quirks || []).join(', ')}
-- Humor: ${(botPrompt.add_ons?.humor || []).join(', ')}
+Lore:
+${(botPrompt.lore || []).join('\n')}
 
-Instructions:
-- Do: ${(botPrompt.instruction?.do_donts?.do || []).join('\n- ')}
-- Avoid: ${botPrompt.instruction?.do_donts?.dont || 'None'}
-- Message Length: ${botPrompt.instruction?.message_length || 'Any'}
-- Emoji Use: ${botPrompt.instruction?.emoji_use || 'Any'}
-- Catchphrases: ${(botPrompt.instruction?.catchphrases || []).join(', ')}
-- Criticism Response: ${(botPrompt.instruction?.criticism_response || []).join('\n')}
+Knowledge:
+${(botPrompt.knowledge || []).join('\n')}
 
-Examples:
-${(botPrompt.example_dialogues || []).map(ex => `User: ${ex.user}\nResponse: ${ex.response}`).join('\n')}
+Style:
+- ${botPrompt.style?.all?.join('\n- ') || 'None'}
+
+Topics:
+- ${botPrompt.topics?.join(', ') || 'None'}
+
+Example Messages:
+${(botPrompt.messageExamples || [])
+  .map(pair => {
+    const userMsg = pair.find(msg => msg.user !== botPrompt.name)?.content.text;
+    const botMsg = pair.find(msg => msg.user === botPrompt.name)?.content.text;
+    return `User: ${userMsg}\n${botPrompt.name}: ${botMsg}`;
+  })
+  .join('\n\n')}
+
+Tone: Keep responses sweet, warm, supportive, and witty.
 `.trim();
 
   return [
     { role: 'system', content: systemContent },
-    ...chatHistory.slice(-10)
+    ...chatHistory.slice(-10),
   ];
 };
 
